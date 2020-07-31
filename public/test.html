@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+</head>
+<body>
+<script src="js/jquery.js"></script>
+<script>
+  for(let i = 4;i < 14;i++){
+    $.ajax({
+      url : 'add_blog',
+      data : {
+        account : 'a',
+        title : 'a标题' + i,
+        content : 'a内容' + i,
+      }
+    });
+  }
+
+</script>
+</body>
+</html>

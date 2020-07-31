@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>添加博客</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<div>
+  <div>
+    标题：
+    <input type="text" class="title">
+  </div>
+  <div>
+    内容：
+    <div class="content" contenteditable></div>
+
+    <!--<div contenteditable="true" class="content"></div>-->
+    <!--<textarea class="content"></textarea>-->
+  </div>
+  <div>
+    <button type="button" class="submit">提交</button>
+  </div>
+</div>
+<script src="js/jquery.js"></script>
+<script src="js/date.js"></script>
+<script>
+  $('.submit').on('click', function () {
+    $.ajax({
+      url : '/add_blog',
+      data : {
+        title : $('.title').val(),
+        content : $('.content').html(),
+        account : JSON.parse(localStorage.getItem('user_data')).account,
+        create_time : get_time()
+      },
+      success(res){
+        if(res == '添加成功'){
+          location.href = 'index.html';
+        }
+      }
+    });
+  });
+
+
+  // $('.demo-contenteditable').pastableContenteditable();
+  // $('.demo').on('pasteImage', function(ev, data){
+  //   var blobUrl = URL.createObjectURL(data.blob);
+  //   var name = data.name != null ? ', name: ' + data.name : '';
+  //   $('<div class="result">image: ' + data.width + ' x ' + data.height + name + '<img src="' + data.dataURL +'" ><a href="' + blobUrl + '">' + blobUrl + '</div>').insertAfter(this);
+  // }).on('pasteImageError', function(ev, data){
+  //   alert('Oops: ' + data.message);
+  //   if(data.url){
+  //     alert('But we got its url anyway:' + data.url)
+  //   }
+  // }).on('pasteText', function(ev, data){
+  //   $('<div class="result"></div>').text('text: "' + data.text + '"').insertAfter(this);
+  // }).on('pasteTextRich', function(ev, data){
+  //   $('<div class="result"></div>').text('rtf: "' + data.text + '"').insertAfter(this);
+  // }).on('pasteTextHtml', function(ev, data){
+  //   $('<div class="result"></div>').text('html: "' + data.text + '"').insertAfter(this);
+  // });
+</script>
+</body>
+</html>

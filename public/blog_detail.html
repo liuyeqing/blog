@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>博客详情</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<h1 class="title"></h1>
+<div>
+  阅读量：
+  <span class="read_num"></span>
+</div>
+<div>创建时间：
+  <span class="create_time"></span>
+</div>
+<div class="content"></div>
+<div>
+  <img class="like" src="img/like.png" alt="" style="display: none;">
+  <img class="cancel_like" src="img/cancel_like.png" alt="" style="display: none;">
+  点赞次数：
+  <span class="like_num"></span>
+
+  <img class="vote_down" src="img/vote_down.png" alt="" style="display: none;">
+  <img class="cancel_vote_down" src="img/cancel_vote_down.png" alt="" style="display: none;">
+</div>
+<script src="js/jquery.js"></script>
+<script>
+
+  var urlToObject = function(url) {
+    var urlObject = {};
+    if (/\?/.test(url)) {
+      var urlString = url.substring(url.indexOf("?")+1);
+      var urlArray = urlString.split("&");
+      for (var i=0, len=urlArray.length; i<len; i++) {
+        var urlItem = urlArray[i];
+        var item = urlItem.split("=");
+        urlObject[item[0]] = item[1];
+      }
+      return urlObject;
+    }
+  };
+
+  $.ajax({
+    url : '/get_blog_detail',
+    data : {
+      id : urlToObject(location.search).id
+    },
+    success(data){
+      data = JSON.parse(data)[0];
+      $('.title').html(data.title);
+      $('.read_num').html(data.read_num ? data.read_num : 0);
+      $('.create_time').html(data.create_time);
+      $('.content').html(data.content);
+      $('.like_num').html(data.like_num ? data.like_num : 0);
+
+      console.log('data.like', data.like);
+      console.log('data.vote_down', data.vote_down);
+      if(data.like == '0'){
+        $('.like').show();
+        $('.cancel_like').hide();
+      }
+      else{
+        $('.cancel_like').show();
+        $('.like').hide();
+      }
+
+      if(data.vote_down == '0'){
+        $('.vote_down').show();
+        $('.cancel_vote_down').hide();
+      }
+      else{
+        $('.cancel_vote_down').show();
+        $('.vote_down').hide();
+      }
+    }
+  });
+
+  // 点赞
+  $('.like').on('click', function () {
+    $.ajax({
+      url : '/like',
+      data : {
+        id : urlToObject(location.search).id
+      },
+      success(data){
+        data = JSON.parse(data);
+        if(data.code == 2){
+          let like_num = parseInt($('.like_num').html()) + 1;
+          $('.like_num').html(like_num);
+          $('.like').hide();
+          $('.cancel_like').show();
+        }
+      }
+    });
+  });
+
+
+
+  // 取消点赞
+  $('.cancel_like').on('click', function () {
+    $.ajax({
+      url : '/cancel_like',
+      data : {
+        id : urlToObject(location.search).id
+      },
+      success(data){
+        data = JSON.parse(data);
+        if(data.code == 2){
+          let like_num = parseInt($('.like_num').html()) - 1;
+          $('.like_num').html(like_num);
+          $('.like').show();
+          $('.cancel_like').hide();
+        }
+      }
+    });
+  });
+
+
+  // 踩
+  $('.vote_down').on('click', function () {
+    $.ajax({
+      url : '/vote_down',
+      data : {
+        id : urlToObject(location.search).id
+      },
+      success(data){
+        data = JSON.parse(data);
+        if(data.code == 2){
+          $('.vote_down').hide();
+          $('.cancel_vote_down').show();
+        }
+      }
+    });
+  });
+
+
+  // 取消踩
+  $('.cancel_vote_down').on('click', function () {
+    console.log('cancel_vote_down');
+    $.ajax({
+      url : '/cancel_vote_down',
+      data : {
+        id : urlToObject(location.search).id
+      },
+      success(data){
+        data = JSON.parse(data);
+        if(data.code == 2){
+          $('.vote_down').show();
+          $('.cancel_vote_down').hide();
+        }
+      }
+    });
+  });
+
+
+</script>
+</body>
+</html>

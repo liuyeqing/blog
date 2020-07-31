@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>博客系统首页</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<div class="header clearfix">
+  <h1 class="pull_left">博客系统首页</h1>
+  <div class="clearfix pull_right">
+    <div class="account pull_left"></div>
+    <img class="head_portrait pull_left" src="" alt="">
+    <input class="change_head_portrait" type="button" value="修改头像">
+    <input type="file" name="file" id="file" hidden="true">
+
+    <button type="button" class="exit pull_right">退出</button>
+  </div>
+</div>
+<div>
+  <button type="button" class="add_blog">添加博客</button>
+</div>
+<ul class="list">
+</ul>
+<div>
+  博客总数量：<span class="total_num"></span>
+  <button type="button" class="prev">上一页</button>
+  <button type="button" class="next">下一页</button>
+</div>
+<div class="no_data">暂无数据</div>
+<script src="js/jquery.js"></script>
+<script>
+  // 判断有没有头像
+  if(!localStorage.getItem('user_data')){
+    alert('暂未登录，请登录');
+    location.href = 'login.html';
+  }
+
+  let pageIndex = 0;  //博客列表的页数
+  $('.prev').on('click', function () {
+    --pageIndex;
+    get_list(pageIndex);
+  });
+  $('.next').on('click', function () {
+    ++pageIndex;
+    get_list(pageIndex);
+  });
+
+  // 点击退出按钮
+  $('.exit').on('click', function () {
+    localStorage.clear();
+    location.href = 'login.html';
+  });
+
+  //上传图片的业务逻辑函数
+  function uploadFile(){
+    //上传图片的input
+    var file = document.getElementById("file")
+    //因为准备用post提交，又因为图片的内容比较大，所以我们选择使用formdata来承载数据
+    //创建formdata对象
+    var formData = new FormData();
+    //给formdata对象中放入数据(键值对的方式)
+    formData.append('file',file.files[0]);
+    formData.append('account', 'a');
+    //提交请求
+    $.ajax({
+      url: '/upload',//请求路径
+      type: 'POST',
+      data: formData,
+      contentType: false,//为了让浏览器根据传入的formdata来判断contentType
+      processData: false,//同上
+      success: function(data){
+        if(data.code == '2') {
+          alert("上传成功！");
+          $('.head_portrait').attr('src',data.data);
+          let user_data = JSON.parse(localStorage.getItem('user_data'));
+          user_data.head_portrait = data.data;
+          localStorage.setItem('user_data', JSON.stringify(user_data));
+        } else {
+          alert("上传失败！");
+        }
+      },
+      error: function(){
+        alert("与服务器通信发生错误");
+      }
+    });
+  }
+  $('#file').on('change', function () {
+    uploadFile();
+  });
+
+  $('.change_head_portrait').on('click', function () {
+    $('#file').click();
+  });
+
+  // 设置头像
+  let user_data = JSON.parse(localStorage.getItem('user_data'));
+  $('.account').html(user_data.account);
+  $('.head_portrait').attr('src', user_data.head_portrait);
+
+  // 获取博客列表
+  function get_list(pageIndex){
+    $('.list').html('');
+    console.log("JSON.parse(localStorage.getItem('user_data')).account", JSON.parse(localStorage.getItem('user_data')).account);
+    $.ajax({
+      url : '/get_list',
+      data : {
+        // account : JSON.parse(localStorage.getItem('user_data')).account,
+        pageIndex
+      },
+      success(data){
+        let list = JSON.parse(data).result;
+        let total_num = JSON.parse(data).total_num;
+        $('.total_num').html(total_num);
+        if(list.length == 0){
+          $('.no_data').show();
+        }
+        else{
+          for(let i = 0;i < list.length;i++){
+            $('.list').append(`
+              <li data-id="${list[i].id}" class="article_detail">
+                <h2 class="clearfix">
+                  <span class="title pull_left">${list[i].title}</span>
+                  <button type="button" class="delete pull_right">删除</button>
+                </h2>
+                <div>
+                  点赞次数：
+                  <span class="like_num">${list[i].like_num ? list[i].like_num : 0}</span>
+                  作者：
+                  <span class="account">${list[i].account}</span>
+                  阅读量：
+                  <span class="read_num">${list[i].read_num ? list[i].read_num : 0}</span>
+                </div>
+              </li>
+            `);
+          }
+        }
+      }
+    });
+  }
+  get_list(0);
+
+  // 增加博客
+  $('.add_blog').on('click', function () {
+    location.href = 'add_blog.html';
+  });
+
+  $('.list').on('click', '.delete', function (e) {
+    e.stopPropagation();
+    $.ajax({
+      url : '/delete_blog',
+      data : {
+        id : $(this).parents('li').attr('data-id')
+      },
+      success(data){
+        alert('删除成功');
+        get_list();
+      }
+    });
+  });
+
+  $('.list').on('click', '.article_detail', function () {
+    location.href = `blog_detail.html?id=${$(this).attr('data-id')}`;
+  });
+</script>
+</body>
+</html>
