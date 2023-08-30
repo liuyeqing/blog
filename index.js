@@ -11,7 +11,15 @@ var connection = mysql.createConnection({
   database: 'test'
 });
 
-connection.connect();
+connection.connect(function(err) {
+  if (err) {
+    console.error('Error connecting to MySQL database: ' + err.stack);
+    return;
+  }
+
+  console.log('Connected to MySQL database with connection id ' + connection.threadId);
+  // 在这里执行连接成功后的操作
+});
 
 
 var express = require('express');
