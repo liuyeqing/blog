@@ -5,7 +5,7 @@ var mysql  = require('mysql');
 var connection = mysql.createConnection({
   host     : 'localhost',
   user     : 'root',
-  password : '1234',
+  password : '123456',
   timezone:'Asia/Shanghai',
   port: '3306',
   database: 'test'
@@ -197,7 +197,7 @@ app.get('/get_list', function(req, res) {
     }
     console.log('querySql2', querySql2);
     connection.query(querySql2, function (err, total_result) {
-      console.log('total_result', total_result);
+      console.log('total_result', total_result.length, total_result);
       if(err){
         console.log('获取列表2 err',err.message);
         return;
@@ -250,8 +250,9 @@ app.get('/login', function(req, res) {
   let password = req.query.password;
 
   // 查看数据库里是否存在这个账号
-  let querySql = `SELECT * FROM user_list where account="${account}"`;
+  let querySql = `SELECT * FROM user_list where account='${account}'`;
   connection.query(querySql, function (err, result) {
+    console.log('result', result);
     if(err){
       console.log('查询err',err.message);
       return;
@@ -267,20 +268,24 @@ app.get('/login', function(req, res) {
     }
     else{
       // 判断用户输入的密码是否正确
-      if(result[0].password == password){
-        delete result[0].password;
-        result[0].msg = '登录成功';
-        result[0].code = '2';
-        res.end(JSON.stringify(result[0]));
-        // res.end('登录成功');
-      }
-      else{
-        let data = {
-          msg : '密码不正确，请重新输入密码',
-          code : 1
-        };
-        res.end(JSON.stringify(data));
-      }
+      let queryPassSql = `SELECT * FROM user_list where account='${account}' AND password='${result[0].password}'`;
+      connection.query(querySql, function (err, result) {
+        console.log('查询密码是否正确result', result);
+        if(!err){
+          delete result[0].password;
+          result[0].msg = '登录成功';
+          result[0].code = '2';
+          res.end(JSON.stringify(result[0]));
+          // res.end('登录成功');
+        }
+        else{
+          let data = {
+            msg : '密码不正确，请重新输入密码',
+            code : 1
+          };
+          res.end(JSON.stringify(data));
+        }
+      })
     }
   });
 });
@@ -291,25 +296,6 @@ app.get('/register', function(req, res) {
   let password = req.query.password;
   let head_portrait = req.query.head_portrait;
 
-  // 测试代码开始
-  var addSql = 'INSERT INTO user_list(account,password, head_portrait) VALUES(?,?,?)';
-  var addSqlParams = [account, password, head_portrait];
-  //查找id=1的那条数据
-  connection.query(addSql, addSqlParams, function (err, result) {
-    if(err){
-      // console.log('err', err);
-      console.log('err', err.sqlMessage.includes('Duplicate entry'));
-      if(err.sqlMessage.includes('Duplicate entry')){
-        res.end('该账号已经注册');
-      }
-      return;
-    }
-    // connection.end();
-    res.end('注册成功');
-  });
-  return;
-  // 测试代码结束
-  // ------------
   var addSql = 'INSERT INTO user_list(account,password, head_portrait) VALUES(?,?,?)';
   let querySql = `SELECT * FROM user_list where account="${account}"`;
   // 查询数据库里有没有这个账号
